@@ -1,0 +1,821 @@
+# ======================================================
+# 本项目基于Telegram@破手机换盆回收二手富萝莉配置文件修改，
+# 使用者需要具备基本网络常识，或者依靠AI分析故障问题的技能。
+# 使用前请仔细阅读所有中文注释。
+# 作者：ssll (更新日期：2026-06-17)
+# ======================================================
+
+# ======================================================
+# 🛑 部署与排雷操作指南 (Box / Surfing / FlClash / ShellCrash 用户必读)
+# ======================================================
+# ⚠️ 致命冲突警告：
+# 本配置文件兼容纯血 Mihomo 内核的所有客户端，可以与 RDP / Tailscale / Rustdesk / VPN 等共存。
+# 但在同一台设备上，不要同时运行两套流量接管机制例如Flclash。
+#
+# 👉 Box / Surfing 手机端操作步骤：
+# 1. 如果你决定使用 Box for Root / Surfing 模块 (无感静默运行)：
+#    - 确保面板设置中关闭了【自动复写】。
+#    - 找到地区自动代理组模板，启用⚠️ Smart 智能策略代码，注释或者删除掉⚠️ URL-Test 部分代码。
+#    - 将本文件直接替换掉 Box 目录下的 config.yaml，然后重启模块。不要在手机上再打开 FlClash 去接管 VPN！
+#
+# 👉 Flclash 手机端操作步骤：
+# 2. 如果你决定使用图形界面的 FlClash 客户端：
+#    - 必须前往系统设置或面具/KernelSU，【关闭或卸载】Box for Root、Surfing 等底层透明代理模块。
+#    - 重启手机，确保底层路由表清空。
+#    - 找到地区自动代理组模板，启用⚠️ URL-Test 部分代码，注释或者删除掉⚠️ Smart 智能策略代码。
+#    - 打开 FlClash，导入本文件，点击启动即可 (FlClash 会自动拉起 VPN 模式接管)。
+#
+# 👉 Flclash 电脑端操作步骤：
+#    - 找到地区自动代理组模板，启用⚠️ URL-Test 部分代码，注释或者删除掉⚠️ Smart 智能策略代码。
+#    - 将本文件导入电脑端 FlClash ，开启 "TUN 模式" 或 "系统代理" 即可裸跑。
+#
+# 👉 ShellCrash 路由端操作步骤：
+#    - 找到tproxy-port: 7895，将其改为tproxy-port: 9898，
+#    - 导入配置，按提示操作。（目前作者尚未实测）
+# ======================================================
+
+# ======================================================
+# 🔰 新手必读：代理大区选择指南 (如何选择最优节点)
+# ------------------------------------------------------
+# 🇭🇰 香港 (HK)：物理距离最近，延迟极低。适合日常网页浏览、游戏加速。⚠️ 缺点：风控极严，ChatGPT、TikTok 等通常会封锁香港 IP。
+# 🇸🇬 狮城 (SG)：亚太核心枢纽。原生 IP 多，解锁流媒体能力极强（Netflix/Disney+），连接 Telegram 极速，风控相对宽松，推荐作为主力大区。
+# 🇹🇼 台湾 (TW)：万能平衡点。速度快，能完美解锁各类区域限制内容，且 ChatGPT 等 AI 工具基本不封锁。
+# 🇯🇵 日本 (JP)：亚洲互联网枢纽。适合二次元文化站(DMM/Pixiv)解锁，UDP 连通性好，适合语音通话(Discord)。
+# 🇺🇸 美国 (US)：终极解锁方案。延迟较高(150ms+)，但遇到极其严格的区域限制(如 Claude、美国本土银行、原生 TikTok)时，请手动切至美国。
+# 🇰🇷 韩国 (KR)：北方宽带(如联通)的物理外挂，延迟极低；拥有独占韩服游戏与本土流媒体解锁能力。⚠️ 缺点：路由两极分化严重，非原生 IP 风控极严，建议作为“战术备用”，不推荐作全局主力。
+# 🇷🇺 俄罗斯 (RU)：特殊冷门大区。适合特定区域资源与网站访问，日常极少使用。
+#
+# 💡 【节点记忆机制生效提示】：
+# 本配置已开启 `store-selected: true` 功能。你在 App 面板上首次为各大区或应用组手动选取了某个节点（或保持默认）后，该选择会永久保持生效并被内核自动记忆！即使重启手机、重启软件，你的选择都不会变，直到你在 App 中手动点击“清除缓存”或“删除记忆”。
+# ======================================================
+
+# ======================================================
+# 📌 变量与锚点定义区 (预设模板，供下方订阅提供者模块复用，数量、名称务必保持一致)
+# ======================================================
+
+# ⬇️ 机场与优选节点订阅链接提取区
+Sub01: &Sub01 "输入订阅链接"
+Sub02: &Sub02 "输入订阅链接"
+Sub03: &Sub03 "输入订阅链接"
+
+BaiduProxy: &BaiduProxy "https://cdn.jsdelivr.net/gh/MeALiYeYe/ProxyConfigFiles@main/Mihomo/BaiduProxy.yaml"
+
+# ⬇️ 连通性测速链接
+ProxyTest: &ProxyTest "https://www.gstatic.com/generate_204"     # 境外节点测速用
+DirecTest: &DirecTest "https://wifi.vivo.com.cn/generate_204"    # 境内节点测速用
+
+# ⬇️ 节点名称正则过滤 
+FilterHK: &FilterHK '(?i)(?:港|香港|🇭🇰|HK|Hong\s?Kong)'
+FilterTW: &FilterTW '(?i)(?:台|台湾|🇼🇸|🇹🇼|TW|Taiwan)'
+FilterSG: &FilterSG '(?i)(?:坡|新加坡|🇸🇬|SG|Singapore)'
+FilterJP: &FilterJP '(?i)(?:日|日本|🇯🇵|JP|Japan)'
+FilterKR: &FilterKR '(?i)(?:韩|韩国|🇰🇷|\bKR\b|KOR|Korea)'
+FilterUS: &FilterUS '(?i)(?:美|美国|🇺🇸|US|States|America)'
+FilterRU: &FilterRU '(?i)(?:俄|俄罗斯|莫斯科|🇷🇺|RU|Russia|Moscow)'
+FilterCF: &FilterCF '(?i)(?:CF|Cloudflare|优选|移动|联通|电信)'
+FilterOther: &FilterOther '^(?!.*(香港|台湾|新加坡|日本|美国|韩国|俄罗斯|🇭🇰|🇼🇸|🇨🇳|🇹🇼|🇸🇬|🇯🇵|🇺🇸|🇰🇷|🇷🇺|HK|TW|SG|JP|US|KR|RU|CF|Cloudflare|优选|移动|联通|电信))'
+ExcludeFilter: &ExcludeFilter '(?i)(?:佣金|套餐|官网|官方|网址|售后|免翻|过期|剩余|到期|流量|更新|点外|重置|免流|使用|教程|优惠|超实惠|址|AFF|Days|Date|订阅|群组|TG)'
+
+# ⬇️ 代理提供商通用模板 
+Proxyer: &Proxyer
+  type: http
+  interval: 86400
+  exclude-filter: *ExcludeFilter
+  health-check:
+    enable: true
+    url: *ProxyTest
+    interval: 600
+  header:
+    User-Agent:
+    - "ClashMetaForAndroid/2.11.2.Meta"
+    - "clash.meta"
+    - "mihomo"
+
+# ⬇️ 地区自动代理组模板 (默认启用进阶版：Smart 智能策略)
+# ⚠️ 警告：仅限 Box / Surfing 用户使用！
+# ⚠️ 警告：又或确定Flclash更新了包含 Smart 模块的 Mihomo Alpha 内核。
+# Smartp: &Smartp
+#   type: smart
+#   include-all-providers: true
+#   uselightgbm: true
+#   collectdata: false
+#   prefer-asn: true
+#   max-failed-times: 3
+#   url: *ProxyTest
+#   lazy: true
+#   hidden: true
+
+# ⬇️ 地区自动代理组模板 (FlClash 兼容版 URL-Test)
+# ⚠️ [内核兼容性切换指南]：
+# 由于 FlClash 自带的内核暂不支持最新的 Smart 策略，强行导入会导致报错。
+# 因此，此处使用高兼容性的 `url-test` 策略。Box / Surfing 用户请保持现状！
+# 
+# 💡 【进阶操作】：
+# 1. 请将下方当前生效的 `Smartp: &Smartp` (URL-Test 版) 整段取消注释。
+# 2. 将再上方被注释掉的【Smart 模式版】整段加上 `#` 注释掉。
+Smartp: &Smartp
+  type: url-test
+  include-all-providers: true
+  url: *ProxyTest
+  interval: 300
+  tolerance: 50
+  lazy: true
+  hidden: true
+
+# ⬇️ 境外手动选择组模板
+Groupp: &Groupp
+  type: select
+  proxies:
+  - 🟢 直连
+  - 香港
+  - 台湾
+  - 狮城
+  - 日本
+  - 美国
+  - 韩国
+  - 俄罗斯
+  - CF优选
+  - 其他
+  url: *ProxyTest
+  lazy: true
+  hidden: false
+
+# ⬇️ 境内流转选择组模板
+Groupd: &Groupd
+  type: select
+  proxies:
+  - 🟢 直连
+  - 广东
+  - 江苏
+  - 北京
+  url: *DirecTest
+  lazy: true
+  hidden: false
+
+# ⬇️ 规则集通用配置模板
+rule-anchor:
+  cla: &cla
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 86400
+  dom: &dom
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+  ipc: &ipc
+    type: http
+    behavior: ipcidr
+    format: mrs
+    interval: 86400
+
+# ======================================================
+# ⚙️ 基础静态代理组
+# ======================================================
+proxies:
+- name: 🟢 直连
+  type: direct
+  udp: true
+- name: ⛔️ 拒绝
+  type: reject
+- name: ⭕️ DNS_Hijack
+  type: dns
+
+# ======================================================
+# ☁️ 订阅提供者模块，与上方的机场与优选节点订阅链接数量、名称保持一致
+# ======================================================
+proxy-providers:
+  Sub01:
+    <<: *Proxyer
+    path: ./proxies/Sub01.yaml
+    url: *Sub01
+  Sub02:
+    <<: *Proxyer
+    path: ./proxies/Sub02.yaml
+    url: *Sub02
+  Sub03:
+    <<: *Proxyer
+    path: ./proxies/Sub03.yaml
+    url: *Sub03
+  BaiduProxy:
+    <<: *Proxyer
+    path: ./proxies/BaiduProxy.yaml
+    url: *BaiduProxy
+
+# ======================================================
+# 🎯 应用路由分流组
+# ======================================================
+proxy-groups:
+- name: Location
+  <<: *Groupd
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Bypass.png"
+  # [作用]：虚拟定位。如需更改抖音/小红书IP属地，可切至广东、江苏、北京等。日常选"直连"。
+
+- name: Domestic
+  <<: *Groupd
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Domestic.png"
+  # [作用]：国内日常流量。必须保持"直连"，否则国内 App 加载极慢且易触发异地登录风控。
+
+- name: DNServer
+  <<: *Groupp
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Filter.png"
+  # [作用]：远程 DNS 解析通道。推荐选"香港/日本/台湾/狮城"，极大缩短海外网页首次打开的白屏时间。
+
+# ------------------------------------------------------
+# 🚀 深度优化：AI 智能解锁专区 (底层拨号测速降级方案)
+# ------------------------------------------------------
+# - name: Ai
+#   type: url-test
+#   # ⚠️ 限定订阅源：避免劣质 CF 等干扰节点混入浪费探测时间，默认仅使用高质量的主力机场。
+#   use:
+#   - Sub01
+#   # - Sub02  # 💡 如果你有其他稳定解锁 AI 的机场源，删除行首的 # 号即可添加
+#   # - Sub03
+#   # 双重保险匹配规则：优先筛选含原生/解锁/GPT等关键词的节点；若无，则圈定美/日/台/新等优质大区作为候选池。
+#   filter: '(?i)(?:原生|解锁|专线|GPT|Chat|NF)|(?i)(?:美|日|台|新|US|JP|TW|SG)'
+#   url: "https://gemini.google.com"
+#   interval: 14400 # 测试频率降至 4小时 (14400秒)，极大降低被 AI 网站标记为异常高频流量的风险
+#   tolerance: 100  # 容忍度 100ms，避免不必要的网络微抖动导致节点乱切
+#   icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/ChatGPT.png"
+#   health-check:
+#     enable: true
+#     url: "https://gemini.google.com"
+#     interval: 14400
+#     expected-status: 200/307/302 # 若探测遭遇 403 封锁或 429 频控，立刻踢出候选池
+#   # [作用]：AIGC(ChatGPT/Claude/Gemini) 专属防封锁通道。通过底层直连订阅池与低频真实探测，彻底摆脱“脏IP”引发的断网问题。
+
+# ------------------------------------------------------
+# 🚀 AI 手动选区方案，对国际AI使用频率低的 Box / Surfing 用户可以注释或者删除掉# 🚀 深度优化：AI 智能解锁专区 (底层拨号测速降级方案)手动启用本段代码，实现Lightgbm模型智能优化。
+# Flclash 用户在没有更新 Smart内核前不用考虑，直接默认。
+# ------------------------------------------------------
+- name: Ai
+  <<: *Groupp
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/ChatGPT.png"
+  # [作用]：AIGC(ChatGPT/Claude/Gemini)。建议选"美国/台湾/日本"。⚠️ 必须避开香港，否则封号或报错 Access Denied。
+
+- name: Google
+  <<: *Groupp
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Google_Search.png"
+  # [作用]：谷歌全家桶。推荐选"香港/日本/台湾/狮城"。
+
+- name: GoogleFCM
+  <<: *Groupp
+  icon: "https://cdn.jsdelivr.net/gh/GitMetaio/Surfing@main/app/icon/GoogleFCM.svg"
+  # [作用]：安卓系统级推送通知。推荐保持直连或香港，保证锁屏下耗电最低、收消息最快。
+
+- name: Cloudflare
+  <<: *Groupp
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Cloudflare.png"
+  # [作用]：CF套壳网站。国内直连经常被墙，推荐选"香港/日本/台湾/狮城"。
+
+- name: Github
+  <<: *Groupp
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/GitHub.png"
+  # [作用]：程序员专供。推荐选"香港/日本/台湾/狮城"。
+
+- name: Youtube
+  <<: *Groupp
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/YouTube.png"
+  # [作用]：油管。建议本组选择 "CF优选" 节点，充分利用其免费大流量特性，避免主力机场套餐流量被过快消耗。如需 Premium 后台播放免广告，需选开通了该服务的国家(如美/日)。
+
+- name: Media
+  <<: *Groupp
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/ForeignMedia.png"
+  # [作用]：Netflix/Disney+等。推荐狮城/台湾/日本，解锁率最高。
+
+- name: Porn
+  <<: *Groupp
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Pornhub_1.png"
+  # [作用]：成人内容流媒体视频通常需要耗费大量带宽。强烈建议本组选择 "CF优选" 节点，充分利用其免费大流量特性，避免主力机场套餐流量被过快消耗。
+
+- name: Telegram
+  <<: *Groupp
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Telegram.png"
+  # [作用]：TG。选狮城或香港，物理距离最近，发图最快。
+
+- name: Reddit
+  <<: *Groupp
+  icon: "https://cdn.jsdelivr.net/gh/CLorant/readme-social-icons@main/medium/colored/reddit.svg"
+  # [作用]：推荐选"香港/日本/台湾/狮城"。
+
+- name: Discord
+  <<: *Groupp
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Discord.png"
+  # [作用]：推荐选"香港/日本/台湾/狮城"。
+
+- name: Tiktok
+  <<: *Groupp
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/TikTok.png"
+  # [作用]：国际版抖音。⚠️ 屏蔽了香港，必须选台/日/新/美。
+
+- name: Emby
+  <<: *Groupp
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Emby.png"
+  # [作用]：一般为Emby私有仓库或者公益仓库，建议本组选择 "CF优选" 节点，充分利用其免费大流量特性，避免主力机场套餐流量被过快消耗。
+
+- name: Microsoft
+  <<: *Groupp
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Microsoft.png"
+  # [作用]：微软服务(Office/Xbox)。强烈建议"直连"，避免被识别为异地盗号。
+
+- name: Apple
+  <<: *Groupp
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Apple.png"
+  # [作用]：苹果服务(AppStore/iCloud)。建议"直连"，走国内 CDN 最快。
+
+- name: Foreign
+  <<: *Groupp
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Global.png"
+  # [作用]：未匹配到上面规则的所有海外流量，默认从这走。
+
+- name: Final
+  <<: *Groupp
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Final.png"
+  # [作用]：最终兜底（所有规则都没匹配上的未知流量）。
+
+- name: WebRTC
+  type: select
+  proxies:
+  - ⛔️ 拒绝
+  - ⭕️ DNS_Hijack
+  - 🟢 直连
+  icon: "https://cdn.jsdelivr.net/gh/GitMetaio/Surfing@main/app/icon/WebRTC.svg"
+  # [面板建议]: WebRTC 防泄漏开关。平时保持"拒绝"，使用网页视频会议(如Zoom网页版)没声音/画面时再切"直连"。
+
+# ======================================================
+# 🤖 地区 Smart 组 (底层自动继承锚点区)
+# ======================================================
+- name: 香港
+  <<: *Smartp
+  filter: *FilterHK
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Hong_Kong.png"
+- name: 台湾
+  <<: *Smartp
+  filter: *FilterTW
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Taiwan.png"
+- name: 狮城
+  <<: *Smartp
+  filter: *FilterSG
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Singapore.png"
+- name: 日本
+  <<: *Smartp
+  filter: *FilterJP
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Japan.png"
+- name: 美国
+  <<: *Smartp
+  filter: *FilterUS
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/United_States.png"
+- name: 韩国
+  <<: *Smartp
+  filter: *FilterKR
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Korea.png"
+- name: 俄罗斯
+  <<: *Smartp
+  filter: *FilterRU
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Russia.png"
+- name: CF优选
+  <<: *Smartp
+  filter: *FilterCF
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Cloudflare.png"
+- name: 其他
+  <<: *Smartp
+  filter: *FilterOther
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Global.png"
+
+- name: 江苏
+  <<: *Smartp
+  url: *DirecTest
+  filter: '(?i)(?:南京|苏州)'
+  icon: "https://cdn.jsdelivr.net/gh/lige47/QuanX-icon-rule@main/icon/05icon/lightning(1).png"
+- name: 广东
+  <<: *Smartp
+  url: *DirecTest
+  filter: '(?i)(?:广州)'
+  icon: "https://cdn.jsdelivr.net/gh/lige47/QuanX-icon-rule@main/icon/05icon/lightning(2).png"
+- name: 北京
+  <<: *Smartp
+  url: *DirecTest
+  filter: '(?i)(?:北京|保定)'
+  icon: "https://cdn.jsdelivr.net/gh/lige47/QuanX-icon-rule@main/icon/05icon/lightning(3).png"
+  
+# ======================================================
+# 📚 规则提供者模块
+# ======================================================
+rule-providers:
+  directs:
+    <<: *dom
+    path: ./rules/directs.mrs
+    url: "https://cdn.jsdelivr.net/gh/MeALiYeYe/ProxyConfigFiles@main/Mihomo/rule/Direct/Direct.mrs"
+  directs_ip:
+    <<: *ipc
+    path: ./rules/directs_ip.mrs
+    url: "https://cdn.jsdelivr.net/gh/MeALiYeYe/ProxyConfigFiles@main/Mihomo/rule/Direct/Direct_ip.mrs"
+  ads-awavenue:
+    <<: *dom
+    path: ./rules/ads-awavenue.mrs
+    url: "https://cdn.jsdelivr.net/gh/TG-Twilight/AWAvenue-Ads-Rule@main/Filters/AWAvenue-Ads-Rule-Clash.mrs"
+  ads-mrxx007:
+    <<: *dom
+    path: ./rules/ads-mrxx007.mrs
+    url: "https://github.boki.moe/https://github.com/MRXX007/myadrules-convert/raw/refs/heads/main/10007.mrs"
+  ads-all:
+    <<: *dom
+    path: ./rules/ads-all.mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-ads-all.mrs"
+#   ads-blackmatrix7规则过大，暂不考虑生效，如需生效该规则，需一并修改下方# 2. 基础系统与去广告服务 (匹配即抛弃，速度极快) 和 # 📡 DNS 解析模块 (Fake-IP Enhance 模式) 部分的注释。
+#   ads-blackmatrix7:
+#     <<: *cla
+#     path: ./rules/ads-blackmatrix7.yaml
+#     url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Advertising/Advertising_Classical.yaml"
+  webrtc:
+    <<: *dom
+    path: ./rules/webrtc.mrs
+    url: "https://cdn.jsdelivr.net/gh/musiyun124/mihomo@main/rules/WebRTC.mrs"
+  rejects:
+    <<: *dom
+    path: ./rules/rejects.mrs
+    url: "https://cdn.jsdelivr.net/gh/MeALiYeYe/ProxyConfigFiles@main/Mihomo/rule/Reject/Reject.mrs"
+  rejects_ip:
+    <<: *ipc
+    path: ./rules/rejects_ip.mrs
+    url: "https://cdn.jsdelivr.net/gh/MeALiYeYe/ProxyConfigFiles@main/Mihomo/rule/Reject/Reject_ip.mrs"
+  porn-hub:
+    type: http
+    behavior: domain         # 纯域名列表必须使用 domain 行为
+    format: yaml
+    interval: 86400
+    path: ./rules/porn-hub.yaml
+    url: "https://github.boki.moe/https://raw.githubusercontent.com/Accademia/Additional_Rule_For_Clash/refs/heads/main/Pornhub/Pornhub_Domain.yaml"  
+  mindgeek-porn:
+    <<: *dom                 # 使用 domain 行为与 mrs 格式的高速锚点
+    path: ./rules/mindgeek-porn.mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/mindgeek-porn.mrs"
+    # 📖 [明文源码阅读链接]: 
+    # https://github.boki.moe/https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/mindgeek-porn.yaml    
+  category-porn:
+    <<: *dom                 # 使用 domain 行为与 mrs 格式的高速锚点
+    path: ./rules/category-porn.mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-porn.mrs"
+    # 📖 [明文源码阅读链接]: 
+    # https://github.boki.moe/https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/category-porn.yaml
+  ai-chat-!cn:
+    <<: *dom
+    path: ./rules/ai-chat-!cn.mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-ai-chat-!cn.mrs"
+  proxys:
+    <<: *dom
+    path: ./rules/proxys.mrs
+    url: "https://cdn.jsdelivr.net/gh/MeALiYeYe/ProxyConfigFiles@main/Mihomo/rule/Proxy/Proxy.mrs"
+  proxys_ip:
+    <<: *ipc
+    path: ./rules/proxys_ip.mrs
+    url: "https://cdn.jsdelivr.net/gh/MeALiYeYe/ProxyConfigFiles@main/Mihomo/rule/Proxy/Proxy_ip.mrs"
+  emby:
+    <<: *dom
+    path: ./rules/emby.mrs
+    url: "https://cdn.jsdelivr.net/gh/MeALiYeYe/ProxyConfigFiles@main/Mihomo/rule/Emby/Emby.mrs"
+  fakelocation:
+    <<: *dom
+    path: ./rules/fakelocation.mrs
+    url: "https://cdn.jsdelivr.net/gh/MeALiYeYe/ProxyConfigFiles@main/Mihomo/rule/FakeLocation/FakeLocation.mrs"
+  fakelocation_ip:
+    <<: *ipc
+    path: ./rules/fakelocation_ip.mrs
+    url: "https://cdn.jsdelivr.net/gh/MeALiYeYe/ProxyConfigFiles@main/Mihomo/rule/FakeLocation/FakeLocation_ip.mrs"
+  private:
+    <<: *dom
+    path: ./rules/private.mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/private.mrs"
+  private_ip:
+    <<: *ipc
+    path: ./rules/private_ip.mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/private.mrs"
+  ntp:
+    <<: *dom
+    path: ./rules/ntp.mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-ntp.mrs"
+  httpdns-cn:
+    <<: *dom
+    path: ./rules/httpdns-cn.mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-httpdns-cn.mrs"
+  tiktok:
+    <<: *dom
+    path: ./rules/tiktok.mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/tiktok.mrs"
+  youtube:
+    <<: *dom
+    path: ./rules/youtube.mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/youtube.mrs"
+  entertainment:
+    <<: *dom
+    path: ./rules/entertainment.mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-entertainment.mrs"
+  telegram:
+    <<: *dom
+    path: ./rules/telegram.mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/telegram.mrs"
+  telegram_ip:
+    <<: *ipc
+    path: ./rules/telegram_ip.mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/telegram.mrs"
+  googlefcm:
+    <<: *dom
+    path: ./rules/googlefcm.mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/googlefcm.mrs"
+  google:
+    <<: *dom
+    path: ./rules/google.mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/google.mrs"
+  google_ip:
+    <<: *ipc
+    path: ./rules/google_ip.mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/google.mrs"
+  cloudflare:
+    <<: *dom
+    path: ./rules/cloudflare.mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/cloudflare.mrs"
+  cloudflare_ip:
+    <<: *ipc
+    path: ./rules/cloudflare_ip.mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/cloudflare.mrs"
+  github:
+    <<: *dom
+    path: ./rules/github.mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/github.mrs"
+  reddit:
+    <<: *dom
+    path: ./rules/reddit.mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/reddit.mrs"
+  discord:
+    <<: *dom
+    path: ./rules/discord.mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/discord.mrs"
+  apple:
+    <<: *dom
+    path: ./rules/apple.mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo-lite/geosite/apple.mrs"
+  apple_ip:
+    <<: *ipc
+    path: ./rules/apple_ip.mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo-lite/geoip/apple.mrs"
+  microsoft:
+    <<: *dom
+    path: ./rules/microsoft.mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/microsoft.mrs"
+  geolocation-!cn:
+    <<: *dom
+    path: ./rules/geolocation-!cn.mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/geolocation-!cn.mrs"
+  cn:
+    <<: *dom
+    path: ./rules/cn.mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/cn.mrs"
+  cn_ip:
+    <<: *ipc
+    path: ./rules/cn_ip.mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/cn.mrs"
+
+# ======================================================
+# 🚦 流量路由规则 (Rules) - 优先级自上而下，匹配即停
+# ======================================================
+rules:
+# 1. 基础防漏与劫持
+- DST-PORT,53/853/8853,⭕️ DNS_Hijack           # 将发往传统及加密 DNS 端口的查询劫持到内核解析
+- AND,((NETWORK,udp),(DST-PORT,3478-3479/5349-5350/19302-19309)),REJECT-DROP # 拦截 STUN 端口防 WebRTC 泄露
+- DST-PORT,1337/2710/6881-6999/7777,REJECT-DROP # 拦截 P2P/BT 端口，保护节点避免收到机场 DMCA 警告
+
+# 2. 基础系统与去广告服务 (匹配即抛弃，速度极快)
+- DST-PORT,5228-5230,GoogleFCM
+- RULE-SET,googlefcm,GoogleFCM
+- DST-PORT,123,🟢 直连
+- RULE-SET,ntp,🟢 直连
+- RULE-SET,private,🟢 直连
+- RULE-SET,private_ip,🟢 直连,no-resolve      # no-resolve: 匹配 IP 规则时不解析域名，提升性能
+- RULE-SET,webrtc,WebRTC
+- RULE-SET,ads-awavenue,⛔️ 拒绝
+- RULE-SET,ads-mrxx007,⛔️ 拒绝
+- RULE-SET,ads-all,⛔️ 拒绝
+# - RULE-SET,ads-blackmatrix7,⛔️ 拒绝
+- RULE-SET,httpdns-cn,⛔️ 拒绝
+- RULE-SET,rejects,⛔️ 拒绝
+- RULE-SET,rejects_ip,⛔️ 拒绝,no-resolve
+
+# 3. 具体应用服务分流
+- DOMAIN-SUFFIX,4d4y.com,日本
+- RULE-SET,directs,Domestic
+- RULE-SET,directs_ip,Domestic,no-resolve
+- RULE-SET,porn-hub,Porn
+- RULE-SET,mindgeek-porn,Porn
+- RULE-SET,category-porn,Porn
+- RULE-SET,ai-chat-!cn,Ai
+- RULE-SET,proxys,Foreign
+- RULE-SET,proxys_ip,Foreign,no-resolve
+- RULE-SET,fakelocation,Location
+- RULE-SET,fakelocation_ip,Location,no-resolve
+- RULE-SET,emby,Emby
+- RULE-SET,tiktok,Tiktok
+- RULE-SET,youtube,Youtube
+- RULE-SET,entertainment,Media
+- RULE-SET,telegram,Telegram
+- RULE-SET,telegram_ip,Telegram,no-resolve
+- RULE-SET,google,Google
+- RULE-SET,google_ip,Google,no-resolve
+- RULE-SET,cloudflare,Cloudflare
+- RULE-SET,cloudflare_ip,Cloudflare,no-resolve
+- RULE-SET,github,Github
+- RULE-SET,reddit,Reddit
+- RULE-SET,discord,Discord
+- RULE-SET,apple,Apple
+- RULE-SET,apple_ip,Apple,no-resolve
+- RULE-SET,microsoft,Microsoft
+- RULE-SET,geolocation-!cn,Foreign
+- RULE-SET,cn,Domestic
+- RULE-SET,cn_ip,Domestic,no-resolve
+- MATCH,Final # 兜底规则
+
+# ======================================================
+# 🔌 面向新手的使用指南（面板开关 vs 配置文件）
+# ======================================================
+# ❓ 核心疑问：如果我在手机 App（如 FlClash）或电脑面板上切换了 TUN / TProxy / Redirect / Mixed / Enhance 等模式，我需要回来修改下面这些代码吗？
+# 💡 终极答案：【绝对不需要修改任何一行代码！】
+#
+# 📖 原理说明：
+# 这份配置文件的“底子”已经打得完美且全能。这里的代码相当于预先造好了所有模式的“大门”（开放了相应的端口和规则）。
+# 当你在 GUI 界面上拨动模式开关时，App 会直接通过底层 API 在【内存】中发号施令，把流量精准导向对应的门。它无需篡改这里的 YAML 文本。
+#
+# 1. 关于 TUN 模式（虚拟网卡）：
+# 看到下方写着 `tun: enable: false` 不要惊慌。这是为了保护底层 Root 玩家防止“双重劫持冲突”。作为普通用户，只要你在 App 界面上点击开启 VPN，App 就会在运行内存里强行拉起虚拟网卡，稳稳接住你的所有流量。下方代码一个字都不用改。
+#
+# 2. 关于 Mixed 模式（局域网共享/主机加速）：
+# 预设已完美开启 `allow-lan: true` 和端口 `7890`。如果你需要给同一 WiFi 下的 Switch 或 PC 共享网络，直接在对方设备填入本机内网 IP 和 7890 端口即可。
+#
+# 3. 关于 ENHANCE（DNS Fake-IP 模式）：
+# 预设已在底层开启。全权由你的面板“代理模式”调度：面板切到“规则/全局”时，它自动发威秒开网页；面板切“直连”时，它自动休眠。
+#
+# 4. 关于 TProxy / Redirect 模式（高级 Root 劫持）：
+# 预设接管端口已备好（9898 / 7892）。无论 Box for Root / Surfing 脚本推哪种底层的防火墙流量进来，内核都能开门放行。
+# ======================================================
+tproxy-port: 9898     # 【TProxy 关键端口】Box for Root/Surfing 默认依赖此端口。
+# tproxy-port: 7895     # 【TProxy 关键端口】ShellCrash 默认依赖此端口，切换ShellCrash请调整该端口号。
+redir-port: 7892      # 【Redirect 关键端口】若 Box 切 Redirect 模式，依赖此端口。
+mixed-port: 7890      # 【混合端口】同时提供 HTTP 和 SOCKS5。可供局域网其他设备接入。
+port: 8080
+socks-port: 1080
+ipv6: true            # 全局 IPv6 开关
+mode: Rule            # 运行模式: 规则模式 (Rule)
+log-level: warning    # 日志等级: warning (日常建议)
+unified-delay: true   # 统一延迟计算
+tcp-concurrent: true  # TCP 并发连接测试，大幅加速网页加载
+allow-lan: true       # 允许局域网设备连接
+external-controller: 0.0.0.0:9090 # 控制面板接口
+external-ui: ./ui/
+external-ui-url: "https://github.boki.moe/https://github.com/Zephyruso/zashboard/releases/latest/download/dist-no-fonts.zip"
+secret: ""
+skip-auth-prefixes:   # [修正]: 严谨的 CIDR 子网掩码书写规范
+- 10.0.0.0/8
+- 127.0.0.1/8
+- 192.168.0.0/16
+
+# ======================================================
+# 🧠 引擎数据库与模型自动更新
+# ======================================================
+geo-auto-update: true
+geo-update-interval: 168 # 7天更新一次 Geo 库
+geox-url:
+  asn: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/GeoLite2-ASN.mmdb"
+
+lgbm-auto-update: true
+lgbm-update-interval: 360 # 15天更新一次机器学习模型
+lgbm-url: "https://github.boki.moe/https://github.com/vernesong/mihomo/releases/download/LightGBM-Model/Model-large.bin"
+
+profile:
+  store-selected: true      # 记忆手动选择的节点
+  store-fake-ip: true       # 保留 Fake-IP 映射，防断连
+  smart-collector-size: 100 # LightGBM 数据池大小
+
+ntp:
+  enable: true
+  write-to-system: false    # 仅内部对时，不修改安卓系统时间
+  server: time.apple.com
+  port: 123
+  interval: 30
+
+# ======================================================
+# 🕵️ 流量嗅探 (Sniffer) - 解决透明代理 DNS 泄露
+# ======================================================
+sniffer:
+  enable: true
+  force-dns-mapping: true   # 强制将 Fake-IP 映射回真实域名，解决 SNI 验证问题
+  parse-pure-ip: true       # 尝试对直接使用 IP 请求的流量嗅探出域名
+  override-destination: false
+  sniff:
+    HTTP:
+      ports: [80, 8080-8880]
+      override-destination: true
+    TLS:
+      ports: [443, 5228-5230, 8443]
+    QUIC:
+      ports: [443, 8443]
+  force-domain: ["+.v2ex.com"]
+skip-domain:               # 跳过内网域名
+- "+.local"
+- "+.lan"
+- "localhost"
+- "Mijia Cloud"
+- "miwifi.com"
+
+# ======================================================
+# 🌐 TUN 模式配置区 (虚拟网卡模式)
+# ======================================================
+tun:
+  enable: false
+  device: Mihomo
+  stack: mixed
+  dns-hijack:
+  - any:53
+  - tcp://any:53
+  udp-timeout: 300
+  auto-route: true
+  auto-detect-interface: true
+  strict-route: true
+
+# ======================================================
+# 📡 DNS 解析模块 (Fake-IP Enhance 模式)
+# ======================================================
+dns:
+  enable: true
+  listen: :1053
+  ipv6: true
+  prefer-h3: true
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.0/16
+  fake-ip-range6: fdfe:dcba:9876::/64
+  fake-ip-filter-mode: rule
+  fake-ip-filter:
+  - RULE-SET,private,real-ip
+  - RULE-SET,ntp,real-ip
+  - RULE-SET,googlefcm,real-ip
+  - RULE-SET,directs,real-ip
+  - RULE-SET,cn,real-ip
+  - MATCH,fake-ip
+  cndns: &cndns
+  - 223.5.5.5
+  - 223.6.6.6
+  - "2400:3200::1"
+  - "2400:3200:baba::1"
+  cndoh: &cndoh
+  - 'quic://dns.alidns.com#🟢 直连'
+  - 'https://dns.alidns.com/dns-query#🟢 直连'
+  cgdoh: &cgdoh
+  - 'https://dns.google/dns-query#DNServer'
+  - 'https://cloudflare-dns.com/dns-query#DNServer'
+  default-nameserver: *cndns
+  direct-nameserver: *cndns
+  proxy-server-nameserver: *cndoh
+  nameserver-policy:
+    'RULE-SET:ads-awavenue,ads-mrxx007,ads-all,rejects': rcode://name_error
+#     'RULE-SET:ads-awavenue,ads-mrxx007,ads-all,ads-blackmatrix7,rejects': rcode://name_error
+    'RULE-SET:cn,apple,microsoft,directs': *cndoh
+  nameserver: *cgdoh
+
+hosts:
+  cdn.jsdelivr.net:
+  - 104.17.207.5
+  - 104.17.208.5
+  - 167.82.1.229
+  - 167.82.49.229
+  raw.githubusercontent.com:
+  - 185.199.108.133
+  - 185.199.109.133
+  - 185.199.110.133
+  - 185.199.111.133
+  - 2606:50c0:8000::154
+  - 2606:50c0:8001::154
+  - 2606:50c0:8002::154
+  - 2606:50c0:8003::154
+  doh.pub:
+  - 1.12.12.21
+  - 120.53.53.53
+  - "2402:4e00::"
+  - "2402:4e00:1::"
+  dns.alidns.com:
+  - 223.5.5.5
+  - 223.6.6.6
+  - "2400:3200::1"
+  - "2400:3200:baba::1"
+  dns.google:
+  - 8.8.4.4
+  - 8.8.8.8
+  - "2001:4860:4860::8844"
+  - "2001:4860:4860::8888"
+  cloudflare-dns.com:
+  - 1.0.0.1
+  - 1.1.1.1
+  - "2606:4700:4700::1001"
+  - "2606:4700:4700::1111"
+  dns.cloudflare.com:
+  - 1.0.0.1
+  - 1.1.1.1
+  - "2606:4700:4700::1001"
+  - "2606:4700:4700::1111"
