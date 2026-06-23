@@ -212,7 +212,7 @@ proxy-groups:
   url: *ProxyTest
   interval: 300
   tolerance: 50
-  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/DNS.png"
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Filter.png"
 
 # WebRTC 防泄漏开关。平时保持"拒绝"，使用网页视频会议(如Zoom网页版)没声音/画面时再切"直连"。
 - name: WebRTC
@@ -238,7 +238,7 @@ proxy-groups:
 - name: Reddit
   type: select
   proxies: [Pre-香港, Pre-台湾, Pre-狮城, Pre-日本, Pre-美国, Pre-其它国家]
-  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Reddit.png"
+  icon: "https://cdn.jsdelivr.net/gh/CLorant/readme-social-icons@main/medium/colored/reddit.svg"
 
 # 🔞 边缘大流量/视频业务：强制走白嫖 CF 大流量池，跑满带宽
 - name: Porn
