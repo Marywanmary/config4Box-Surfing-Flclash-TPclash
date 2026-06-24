@@ -1,26 +1,31 @@
 # ==========================================================
-# ===== Mihomo内核跨平台配置模板
-# ===== 模板适用于 vernesong 分支内核
-# ===== 目前适配 Box / Surfing / ShellCrash，Flclash不支持Smart内核，需要单独配置
-# ===== 注意：Zygisk/Root模块需开启对应端口 (默认均关闭)
-# ===== 作者：ssll     2026.06.23
+# ===== Mihomo内核跨平台配置模板 (官方标准内核专属版)
+# ===== 模板适用于 官方标准分支 (MetaCubeX/mihomo) 内核
+# ===== 核心特性：移除 LGBM，采用 Url-Test 容差防抖动调度
+# ===== 适用软件：Flclash / Clash Meta for Android / Clash Verge / Surfboard
+# ===== 也适用于：Box / Surfing / ShellCrash / OpenClash ，但是无 Smart 和 LightGBM
+# ===== 注意：GUI 软件会自动接管端口与路由，无需配置底层端口
+# ===== 作者：ssll     2026.06.24
 # ==========================================================
 
 # ==============================================================================
 # 01. 订阅源定义 (Provider Resources)
 # ==============================================================================
 # 🎯 以下为用户提供的订阅链接，Sub00一般为机场订阅，SubCF为Cloudflare白嫖Edgetunnel，数量自行调整。
-Sub00: &Sub00 "在此输入订阅链接"
-SubCF01: &SubCF01 "在此输入订阅链接"
-SubCF02: &SubCF02 "在此输入订阅链接"
+Sub00: &Sub00     "填入订阅链接"
+SubCF01: &SubCF01 "填入订阅链接"
+SubCF02: &SubCF02 "填入订阅链接"
+SubCF03: &SubCF03 "填入订阅链接"
+SubCF04: &SubCF04 "填入订阅链接"
+SubCF05: &SubCF05 "填入订阅链接"
+SubCF06: &SubCF06 "填入订阅链接"
+SubCF07: &SubCF07 "填入订阅链接"
 
 # 🎯 以下为国内虚拟定位的百度代理订阅，不要改动。
 BaiduProxy: &BaiduProxy "https://cdn.jsdelivr.net/gh/MeALiYeYe/ProxyConfigFiles@main/Mihomo/BaiduProxy.yaml"
-
-# 💡 国内国外测速链接
+# 💡 国内外测速链接
 ProxyTest: &ProxyTest "https://www.gstatic.com/generate_204"
 DirecTest: &DirecTest "https://wifi.vivo.com.cn/generate_204"
-
 
 # ==============================================================================
 # 02. 节点过滤正则 (Regex Filters)
@@ -38,7 +43,8 @@ FilterRU: &FilterRU '(?i)(?:俄|俄罗斯|莫斯科|🇷🇺|RU|Russia|Moscow)'
 # 🌍 其它国家兜底节点：利用负向断言，仅排除港台日新美，保留包含韩、俄在内的其他所有剩余节点
 FilterRest: &FilterRest '^(?!.*(?i)(?:港|香港|🇭🇰|HK|Hong\s?Kong|台|台湾|🇼🇸|🇹🇼|TW|Taiwan|坡|新加坡|🇸🇬|SG|Singapore|日|日本|🇯🇵|JP|Japan|美|美国|🇺🇸|US|States|America)).*'
 
-ExcludeFilter: &ExcludeFilter '(?i)(?:佣金|套餐|官网|官方|网址|售后|免翻|过期|剩余|到期|流量|更新|点外|重置|免流|使用|教程|优惠|超实惠|址|AFF|Days|Date)'
+# 🌍 屏蔽无效信息节点
+ExcludeFilter: &ExcludeFilter '(?i)(?:佣金|套餐|官网|官方|网址|售后|免翻|过期|剩余|到期|流量|更新|点外|重置|免流|使用|教程|优惠|超实惠|址|频道|群|tg|订阅|AFF|Days|Date)'
 
 # ==============================================================================
 # 03. 高级 YAML 锚点模板 (Advanced YAML Anchors)
@@ -54,37 +60,30 @@ Proxyer: &Proxyer
   header:
     User-Agent: ["ClashMetaForAndroid/2.11.2.Meta", "clash.meta", "mihomo"]
 
-Smart_Premium: &Smart_Premium
-  type: smart
+# 🛡️ 官方标准版适配：使用 Url-Test 并加入 Tolerance 容差机制
+UrlTest_Premium: &UrlTest_Premium
+  type: url-test
   use: [Sub00]
   interval: 300
-  uselightgbm: true
-  collectdata: false
-  prefer-asn: true
-  max-failed-times: 3
+  tolerance: 50
   url: *ProxyTest
   lazy: true
   hidden: true
 
-Smart_CF: &Smart_CF
-  type: smart
-  use: [SubCF01, SubCF02]
+UrlTest_CF: &UrlTest_CF
+  type: url-test
+  use: [SubCF01, SubCF02, SubCF03, SubCF04, SubCF05, SubCF06, SubCF07]
   interval: 300
-  uselightgbm: true
-  collectdata: false
-  prefer-asn: true
-  max-failed-times: 3
+  tolerance: 50
   url: *ProxyTest
   lazy: true
   hidden: true
 
-Smart_Domestic: &Smart_Domestic
-  type: smart
+UrlTest_Domestic: &UrlTest_Domestic
+  type: url-test
   use: [BaiduProxy]
   interval: 300
-  uselightgbm: true
-  collectdata: false
-  max-failed-times: 3
+  tolerance: 50
   url: *DirecTest
   lazy: true
   hidden: true
@@ -126,6 +125,26 @@ proxy-providers:
     <<: *Proxyer
     path: ./proxies/SubCF02.yaml
     url: *SubCF02
+  SubCF03:
+    <<: *Proxyer
+    path: ./proxies/SubCF03.yaml
+    url: *SubCF03
+  SubCF04:
+    <<: *Proxyer
+    path: ./proxies/SubCF04.yaml
+    url: *SubCF04
+  SubCF05:
+    <<: *Proxyer
+    path: ./proxies/SubCF05.yaml
+    url: *SubCF05
+  SubCF06:
+    <<: *Proxyer
+    path: ./proxies/SubCF06.yaml
+    url: *SubCF06
+  SubCF07:
+    <<: *Proxyer
+    path: ./proxies/SubCF07.yaml
+    url: *SubCF07
   BaiduProxy:
     <<: *Proxyer
     path: ./proxies/BaiduProxy.yaml
@@ -144,60 +163,144 @@ proxy-groups:
 # ------------------------------------------------------------------------------
 # 🧠 [Pre] 纯净高阶节点：智能测速组
 - name: Pre-香港
-  <<: *Smart_Premium
+  <<: *UrlTest_Premium
   filter: *FilterHK
 - name: Pre-台湾
-  <<: *Smart_Premium
+  <<: *UrlTest_Premium
   filter: *FilterTW
 - name: Pre-狮城
-  <<: *Smart_Premium
+  <<: *UrlTest_Premium
   filter: *FilterSG
 - name: Pre-日本
-  <<: *Smart_Premium
+  <<: *UrlTest_Premium
   filter: *FilterJP
 - name: Pre-美国
-  <<: *Smart_Premium
+  <<: *UrlTest_Premium
   filter: *FilterUS
 - name: Pre-其它国家
-  <<: *Smart_Premium
+  <<: *UrlTest_Premium
   filter: *FilterRest
   icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/United_Nations.png"
 
 # 🧠 [CF] 大流量白嫖节点：智能测速组
 - name: CF-香港
-  <<: *Smart_CF
+  <<: *UrlTest_CF
   filter: *FilterHK
 - name: CF-台湾
-  <<: *Smart_CF
+  <<: *UrlTest_CF
   filter: *FilterTW
 - name: CF-狮城
-  <<: *Smart_CF
+  <<: *UrlTest_CF
   filter: *FilterSG
 - name: CF-日本
-  <<: *Smart_CF
+  <<: *UrlTest_CF
   filter: *FilterJP
 - name: CF-美国
-  <<: *Smart_CF
+  <<: *UrlTest_CF
   filter: *FilterUS
 - name: CF-其它国家
-  <<: *Smart_CF
+  <<: *UrlTest_CF
   filter: *FilterRest
   icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/United_Nations.png"
 
 # 🧠 国内虚拟定位智能测速组
 - name: 江苏
-  <<: *Smart_Domestic
+  <<: *UrlTest_Domestic
   filter: '(?i)(?:南京|苏州)'
 - name: 广东
-  <<: *Smart_Domestic
+  <<: *UrlTest_Domestic
   filter: '(?i)(?:广州|深圳)'
 - name: 北京
-  <<: *Smart_Domestic
+  <<: *UrlTest_Domestic
   filter: '(?i)(?:北京|保定)'
 
 # ------------------------------------------------------------------------------
 # 5.2 【顶层业务组】(直接面向用户 UI 面板)
 # ------------------------------------------------------------------------------
+- name: DNServer
+  type: url-test
+  use: [Sub00]
+  url: *ProxyTest
+  interval: 300
+  tolerance: 50
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/DNS.png"
+
+# 🎯 AI专属高要求业务组：使用智能调度纯净机场节点
+- name: Ai
+  type: select
+  proxies: [Pre-台湾, Pre-狮城, Pre-日本, Pre-美国, Pre-其它国家]
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/ChatGPT.png"
+
+- name: Google
+  type: select
+  proxies: [CF-香港, CF-台湾, CF-狮城, CF-日本, CF-美国, CF-其它国家, Pre-香港, Pre-台湾, Pre-狮城, Pre-日本, Pre-美国, Pre-其它国家]
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Google_Search.png"
+
+- name: GoogleFCM
+  type: select
+  proxies: [🟢 直连, Pre-香港, Pre-台湾, Pre-狮城, Pre-日本, Pre-美国, Pre-其它国家]
+  icon: "https://cdn.jsdelivr.net/gh/GitMetaio/Surfing@main/app/icon/GoogleFCM.svg"
+
+- name: Github
+  type: select
+  proxies: [CF-香港, CF-台湾, CF-狮城, CF-日本, CF-美国, CF-其它国家, 🟢 直连]
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/GitHub.png"
+
+- name: Telegram
+  type: select
+  proxies: [Pre-香港, Pre-台湾, Pre-狮城, Pre-日本, Pre-美国, Pre-其它国家]
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Telegram.png"
+
+- name: Reddit
+  type: select
+  proxies: [Pre-香港, Pre-台湾, Pre-狮城, Pre-日本, Pre-美国, Pre-其它国家]
+  icon: "https://cdn.jsdelivr.net/gh/CLorant/readme-social-icons@main/medium/colored/reddit.svg"
+
+- name: Cloudflare
+  type: select
+  proxies: [CF-香港, CF-台湾, CF-狮城, CF-日本, CF-美国, CF-其它国家, Pre-香港, Pre-台湾, Pre-狮城, Pre-日本, Pre-美国, Pre-其它国家, 🟢 直连]
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Cloudflare.png"
+
+- name: Youtube
+  type: select
+  proxies: [CF-香港, CF-台湾, CF-狮城, CF-日本, CF-美国, CF-其它国家, Pre-香港, Pre-台湾, Pre-狮城, Pre-日本, Pre-美国, Pre-其它国家]
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/YouTube.png"
+
+- name: Media
+  type: select
+  proxies: [CF-香港, CF-台湾, CF-狮城, CF-日本, CF-美国, CF-其它国家, Pre-香港, Pre-台湾, Pre-狮城, Pre-日本, Pre-美国, Pre-其它国家]
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/ForeignMedia.png"
+
+- name: Apple
+  type: select
+  proxies: [🟢 直连, Pre-香港, Pre-台湾, Pre-狮城, Pre-日本, Pre-美国, Pre-其它国家]
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Apple.png"
+
+- name: Microsoft
+  type: select
+  proxies: [🟢 直连, Pre-香港, Pre-台湾, Pre-狮城, Pre-日本, Pre-美国, Pre-其它国家]
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Microsoft.png"
+
+- name: Porn
+  type: select
+  proxies: [CF-香港, CF-台湾, CF-狮城, CF-日本, CF-美国, CF-其它国家]
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Pornhub_1.png"
+
+- name: Tiktok
+  type: select
+  proxies: [CF-台湾, CF-狮城, CF-日本, CF-美国, CF-其它国家, Pre-台湾, Pre-狮城, Pre-日本, Pre-美国, Pre-其它国家]
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/TikTok.png"
+
+- name: Discord
+  type: select
+  proxies: [Pre-香港, Pre-台湾, Pre-狮城, Pre-日本, Pre-美国, Pre-其它国家]
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Discord.png"
+
+- name: Emby
+  type: select
+  proxies: [🟢 直连, CF-香港, CF-台湾, CF-狮城, CF-日本, CF-美国, CF-其它国家]
+  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Emby.png"
+
 - name: Location
   <<: *Groupd
   icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Bypass.png"
@@ -206,21 +309,10 @@ proxy-groups:
   <<: *Groupd
   icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Domestic.png"
 
-- name: DNServer
-  type: url-test
-  use: [Sub00]
-  url: *ProxyTest
-  interval: 300
-  tolerance: 50
-  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Filter.png"
-
 # WebRTC 防泄漏开关。平时保持"拒绝"，使用网页视频会议(如Zoom网页版)没声音/画面时再切"直连"。
 - name: WebRTC
   type: select
-  proxies:
-  - ⛔️ 拒绝
-  - ⭕️ DNS_Hijack
-  - 🟢 直连
+  proxies: [⛔️ 拒绝, ⭕️ DNS_Hijack, 🟢 直连]
   icon: "https://cdn.jsdelivr.net/gh/GitMetaio/Surfing@main/app/icon/WebRTC.svg"
 
 # 📍 综合海外代理组
@@ -229,93 +321,16 @@ proxy-groups:
   proxies: [🟢 直连, Pre-香港, CF-香港, Pre-台湾, CF-台湾, Pre-狮城, CF-狮城, Pre-日本, CF-日本, Pre-美国, CF-美国, Pre-其它国家, CF-其它国家]
   icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Global.png"
 
-# 🎯 AI专属高要求业务组：使用智能调度纯净机场节点
-- name: Ai
-  type: select
-  proxies: [Pre-台湾, Pre-狮城, Pre-日本, Pre-美国, Pre-其它国家]
-  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/ChatGPT.png"
-
-- name: Reddit
-  type: select
-  proxies: [Pre-香港, Pre-台湾, Pre-狮城, Pre-日本, Pre-美国, Pre-其它国家]
-  icon: "https://cdn.jsdelivr.net/gh/CLorant/readme-social-icons@main/medium/colored/reddit.svg"
-
-# 🔞 边缘大流量/视频业务：强制走白嫖 CF 大流量池，跑满带宽
-- name: Porn
-  type: select
-  proxies: [CF-香港, CF-台湾, CF-狮城, CF-日本, CF-美国, CF-其它国家]
-  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Pornhub_1.png"
-
-# 🎬 修复：改为自动测速池，避免单一节点卡顿导致视频缓冲
-- name: Youtube
-  type: select
-  proxies: [CF-香港, CF-台湾, CF-狮城, CF-日本, CF-美国, CF-其它国家]
-  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/YouTube.png"
-
-# 🎬 Netflix、Disney+等海外流媒体，CF节点可能无法解锁，需要切换到Pre节点
-- name: Media
-  type: select
-  proxies: [CF-香港, CF-台湾, CF-狮城, CF-日本, CF-美国, CF-其它国家, Pre-香港, Pre-台湾, Pre-狮城, Pre-日本, Pre-美国, Pre-其它国家]
-  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/ForeignMedia.png"
-
-# 🍎 Apple 业务：直连优先，备用纯净海外节点
-- name: Apple
-  type: select
-  proxies: [🟢 直连, Pre-香港, Pre-台湾, Pre-狮城, Pre-日本, Pre-美国, Pre-其它国家]
-  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Apple.png"
-
-# 🪟 Microsoft 业务：直连优先，备用纯净海外节点
-- name: Microsoft
-  type: select
-  proxies: [🟢 直连, Pre-香港, Pre-台湾, Pre-狮城, Pre-日本, Pre-美国, Pre-其它国家]
-  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Microsoft.png"
-
-# 🔔 Google FCM 心跳推送：直连优先，省电且防止断流
-- name: GoogleFCM
-  type: select
-  proxies: [🟢 直连, Pre-香港, Pre-台湾, Pre-狮城, Pre-日本, Pre-美国, Pre-其它国家]
-  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Google_Firebase.png"
-
-- name: Google
-  type: select
-  proxies: [Pre-香港, Pre-台湾, Pre-狮城, Pre-日本, Pre-美国, Pre-其它国家, 🟢 直连]
-  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Google_Search.png"
-
-- name: Github
-  type: select
-  proxies: [CF-香港, CF-台湾, CF-狮城, CF-日本, CF-美国, CF-其它国家, 🟢 直连]
-  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/GitHub.png"
-
-- name: Cloudflare
-  type: select
-  proxies: [CF-香港, CF-台湾, CF-狮城, CF-日本, CF-美国, CF-其它国家, 🟢 直连]
-  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Cloudflare.png"
-
-- name: Telegram
-  type: select
-  proxies: [Pre-香港, Pre-台湾, Pre-狮城, Pre-日本, Pre-美国, Pre-其它国家]
-  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Telegram.png"
-
-- name: Discord
-  type: select
-  proxies: [Pre-香港, Pre-台湾, Pre-狮城, Pre-日本, Pre-美国, Pre-其它国家]
-  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Discord.png"
-
-# 国际版抖音。⚠️ 屏蔽了香港，必须选台/日/新/美。
-- name: Tiktok
-  type: select
-  proxies: [CF-台湾, CF-狮城, CF-日本, CF-美国, CF-其它国家, Pre-台湾, Pre-狮城, Pre-日本, Pre-美国, Pre-其它国家]
-  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/TikTok.png"
-
-- name: Emby
-  type: select
-  proxies: [🟢 直连, CF-香港, CF-台湾, CF-狮城, CF-日本, CF-美国, CF-其它国家]
-  icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Emby.png"
-
 - name: Final
   type: select
   proxies: [Foreign, 🟢 直连]
   icon: "https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Final.png"
+
+- name: GLOBAL
+  type: select
+  proxies: [Foreign, 🟢 直连]
+  hidden: true
+
 
 # ==============================================================================
 # 06. 规则集配置 (Rule Providers)
@@ -499,13 +514,12 @@ rule-providers:
     path: ./rules/webrtc.mrs
     url: "https://cdn.jsdelivr.net/gh/MeALiYeYe/ProxyConfigFiles@main/Mihomo/rule/WebRTC/WebRTC.mrs"
 # 备用地址    url: "https://cdn.jsdelivr.net/gh/musiyun124/mihomo@main/rules/WebRTC.mrs"
-    
 
 # ==============================================================================
 # 07. 路由规则匹配 (Rules)
 # ==============================================================================
 rules:
-# 🔧 1. DNS 劫持放行 (最高优先级)
+# 🔧 1. 【DNS 劫持放行 (最高优先级)】
 - DST-PORT,53,⭕️ DNS_Hijack
 - DST-PORT,853,⭕️ DNS_Hijack
 - DST-PORT,8853,⭕️ DNS_Hijack
@@ -537,11 +551,19 @@ rules:
 - DST-PORT,5938,🟢 直连
 - DST-PORT,11080,🟢 直连
 
-# 🔧 5. Android FCM 推送调度
+# 🛡️ 5. 【局域网直连绕透】
+- IP-CIDR,192.168.0.0/16,🟢 直连,no-resolve
+- IP-CIDR,10.0.0.0/8,🟢 直连,no-resolve
+- IP-CIDR,172.16.0.0/12,🟢 直连,no-resolve
+- IP-CIDR,127.0.0.0/8,🟢 直连,no-resolve
+- IP-CIDR6,fc00::/7,🟢 直连,no-resolve
+- IP-CIDR6,fe80::/10,🟢 直连,no-resolve
+
+# 🔧 6. 【Android FCM 推送调度】
 - DST-PORT,5228-5230,GoogleFCM
 - RULE-SET,googlefcm,GoogleFCM
 
-# 🔧 6. 常规基础直连与拦截
+# 🔧 7. 【常规基础直连与拦截】
 - DST-PORT,123,🟢 直连
 - RULE-SET,ntp,🟢 直连
 - RULE-SET,httpdns-cn,🟢 直连
@@ -560,7 +582,7 @@ rules:
 - RULE-SET,fakelocation,Location
 - RULE-SET,fakelocation_ip,Location,no-resolve
 
-# 🔧 7. 常规业务分流
+# 🔧 8. 【常规业务分流】
 - DOMAIN-SUFFIX,4d4y.com,CF-日本
 - RULE-SET,youtube,Youtube
 - RULE-SET,tiktok,Tiktok
@@ -581,6 +603,7 @@ rules:
 - RULE-SET,apple,Apple
 - RULE-SET,microsoft,Microsoft
 
+# 🛡️ 9. 【兜底规则】
 - RULE-SET,geolocation-!cn,Foreign
 - RULE-SET,cn,Domestic
 - RULE-SET,cn_ip,Domestic,no-resolve
@@ -624,10 +647,12 @@ external-controller: 0.0.0.0:9090
 external-ui: "./ui/Zash"
 external-ui-url: "https://cdn.jsdelivr.net/gh/Zephyruso/zashboard/releases/latest/download/dist-no-fonts.zip"
 secret: ""
+
 skip-auth-prefixes:
-- 10.0.0.1/8
-- 127.0.0.1/8
-- 192.168.0.1/16
+- 127.0.0.0/8
+- 192.168.0.0/16
+- 10.0.0.0/8
+- 172.16.0.0/12
 
 # ==============================================================================
 # 09. 系统底层基础设置 (System & Geo Database)
@@ -638,10 +663,6 @@ geox-url:
   geoip: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.metadb"
   geosite: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geosite.dat"
   asn: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/GeoLite2-ASN.mmdb"
-
-lgbm-auto-update: true
-lgbm-update-interval: 360
-lgbm-url: "https://cdn.jsdelivr.net/gh/vernesong/mihomo/releases/download/LightGBM-Model/Model-large.bin"
 
 profile:
   store-selected: true
